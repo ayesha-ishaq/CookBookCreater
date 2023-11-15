@@ -26,6 +26,7 @@ from models.blip import blip_decoder
 import utils
 from utils import cosine_lr_schedule
 from data import create_dataset, create_sampler, create_loader
+from data.utils import save_result, custom_title_eval
 
 def train(model, data_loader, optimizer, epoch, device):
     # train
@@ -65,17 +66,20 @@ def evaluate(model, data_loader, device, config):
     print_freq = 10
 
     result = []
-    for image, image_id in metric_logger.log_every(data_loader, print_freq, header): 
+    gt = {'annotations':[], 'images':[]}
+    for image, captions_gt, image_id in metric_logger.log_every(data_loader, print_freq, header): 
         
         image = image.to(device)       
         
         captions = model.generate(image, sample=False, num_beams=config['num_beams'], max_length=config['max_length'], 
                                   min_length=config['min_length'])
         
-        for caption, img_id in zip(captions, image_id):
+        for caption, img_id, caption_gt in zip(captions, image_id, captions_gt):
             result.append({"image_id": img_id.item(), "caption": caption})
+            gt['annotations'].append({"image_id": img_id.item(), "caption": caption_gt, 'id': img_id.item()})
+            gt['images'].append({"id": img_id.item()})
   
-    return result
+    return result, gt
 
 
 def main(args, config):
@@ -92,18 +96,18 @@ def main(args, config):
 
     #### Dataset #### 
     print("Creating captioning dataset")
-    train_dataset = create_dataset('custom', config)
+    train_dataset, val_dataset = create_dataset('custom', config)
 
     if args.distributed:
         num_tasks = utils.get_world_size()
         global_rank = utils.get_rank()            
-        samplers = create_sampler([train_dataset], [True], num_tasks, global_rank)       
+        samplers = create_sampler([train_dataset, val_dataset], [True, False], num_tasks, global_rank)       
     else:
         samplers = [None]
     
-    train_loader = create_loader([train_dataset],samplers,
-                                 batch_size=[config['batch_size']],num_workers=[4],
-                                 is_trains=[True], collate_fns=[None])[0]         
+    train_loader, val_loader = create_loader([train_dataset, val_dataset],samplers,
+                                 batch_size=[config['batch_size']]*2,num_workers=[4, 4],
+                                 is_trains=[True, False], collate_fns=[None, None])        
 
     #### Model #### 
     print("Creating model")
@@ -120,6 +124,8 @@ def main(args, config):
     
     optimizer = torch.optim.AdamW(params=model.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
         
+    best = 0
+    best_epoch = 0
 
     print("Start training")
     start_time = time.time()    
@@ -132,17 +138,28 @@ def main(args, config):
                 
             train_stats = train(model, train_loader, optimizer, epoch, device) 
         
+        val_result, gt = evaluate(model_without_ddp, val_loader, device, config)  
+        val_result_file = save_result(val_result, args.result_dir, 'val_epoch%d'%epoch, remove_duplicate='image_id')
+        val_gt_file = save_result(gt, args.result_dir, 'val_gt_epoch%d'%epoch)    
 
         if utils.is_main_process():   
+            eval_val = custom_title_eval(val_gt_file, val_result_file,'val')
             save_obj = {
                     'model': model_without_ddp.state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'config': config,
                     'epoch': epoch,
                 }
+            if eval_val.eval['ROUGE_L'] + eval_val.eval['Bleu_4']> best:
+                    best = eval_val.eval['ROUGE_L'] + eval_val.eval['Bleu_4']
+                    best_epoch = epoch                
+                    torch.save(save_obj, os.path.join(args.output_dir, 'checkpoint_best.pth')) 
 
-            torch.save(save_obj, os.path.join(args.output_dir, 'checkpoint{}.pth'.format(epoch))) 
-            log_stats = {**{f'train_{k}': v for k, v in train_stats.items()}}
+            log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
+                             **{f'val_{k}': v for k, v in eval_val.eval.items()},                      
+                             'epoch': epoch,
+                             'best_epoch': best_epoch,
+                            }
             with open(os.path.join(args.output_dir, "log.txt"),"a") as f:
                 f.write(json.dumps(log_stats) + "\n")  
                     

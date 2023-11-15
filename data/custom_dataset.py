@@ -8,13 +8,15 @@ from PIL import Image
 from data.utils import pre_caption
 
 class CustomDataset(Dataset):
-    def __init__(self, transform, image_root, ann_root, max_words=30, prompt=''):        
+    def __init__(self, transform, image_root, ann_root, max_words=30, prompt='', train=True):        
         '''
         image_root (string): Root directory of images (e.g. coco/images/)
         ann_root (string): directory to store the annotation file
         '''        
-        
-        filename = 'val.json'
+        if train:
+            filename = 'train.json'
+        else:
+            filename = 'val.json'
 
         self.annotation = json.load(open(os.path.join(ann_root,filename),'r'))
         self.transform = transform

@@ -70,8 +70,9 @@ def create_dataset(dataset, config, min_scale=0.5):
         return train_dataset, val_dataset, test_dataset   
     
     elif dataset=="custom":
-        train_dataset = CustomDataset(transform_train, config['image_root'], config['ann_root'], prompt=config['prompt'])
-        return train_dataset
+        train_dataset = CustomDataset(transform_train, config['image_root'], config['ann_root'], prompt=config['prompt'], train=True)
+        val_dataset = CustomDataset(transform_train, config['image_root'], config['ann_root'], prompt=config['prompt'], train=False)
+        return train_dataset, val_dataset
     
     
 def create_sampler(datasets, shuffles, num_tasks, global_rank):
