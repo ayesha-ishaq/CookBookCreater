@@ -1,0 +1,4 @@
+{ann_root: /home/ayesha.ishaq/Desktop/AI701/CookBookCreater/recipe1M/, batch_size: 16,
+image_root: /home/ayesha.ishaq/Downloads/, image_size: 384, init_lr: 1e-05, max_epoch: 1,
+max_length: 20, min_length: 5, min_lr: 0, num_beams: 3, pretrained: /home/ayesha.ishaq/Desktop/AI701/CookBookCreater/checkpoint_best.pth,
+prompt: 'the food is ', vit: base, vit_ckpt_layer: 0, vit_grad_ckpt: false, weight_decay: 0.05}

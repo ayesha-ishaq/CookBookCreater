@@ -66,7 +66,7 @@ def evaluate(model, data_loader, device, config):
     print_freq = 10
 
     result = []
-    for image, image_id in metric_logger.log_every(data_loader, print_freq, header): 
+    for image, caption, image_id in metric_logger.log_every(data_loader, print_freq, header): 
         
         image = image.to(device)       
         

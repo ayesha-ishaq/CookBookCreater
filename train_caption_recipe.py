@@ -71,9 +71,9 @@ def evaluate(model, data_loader, device, config):
         
         image = image.to(device)       
         
-        captions = model.generate(image, sample=False, num_beams=config['num_beams'], max_length=config['max_length'], 
+        captions = model.generate(image, sample=True, num_beams=config['num_beams'], max_length=config['max_length'], 
                                   min_length=config['min_length'])
-        
+       
         for caption, img_id, caption_gt in zip(captions, image_id, captions_gt):
             result.append({"image_id": img_id.item(), "caption": caption})
             gt['annotations'].append({"image_id": img_id.item(), "caption": caption_gt, 'id': img_id.item()})
@@ -139,8 +139,8 @@ def main(args, config):
             train_stats = train(model, train_loader, optimizer, epoch, device) 
         
         val_result, gt = evaluate(model_without_ddp, val_loader, device, config)  
-        val_result_file = save_result(val_result, args.result_dir, 'val_epoch%d'%epoch, remove_duplicate='image_id')
-        val_gt_file = save_result(gt, args.result_dir, 'val_gt_epoch%d'%epoch)    
+        _, val_result_file = save_result(val_result, args.result_dir, 'val_epoch%d'%epoch, remove_duplicate='image_id')
+        val_gt_file, _ = save_result(gt, args.result_dir, 'val_gt_epoch%d'%epoch)    
 
         if utils.is_main_process():   
             eval_val = custom_title_eval(val_gt_file, val_result_file,'val')
@@ -150,8 +150,8 @@ def main(args, config):
                     'config': config,
                     'epoch': epoch,
                 }
-            if eval_val.eval['ROUGE_L'] + eval_val.eval['Bleu_4']> best:
-                    best = eval_val.eval['ROUGE_L'] + eval_val.eval['Bleu_4']
+            if eval_val.eval['ROUGE_L'] + eval_val.eval['CIDEr']> best:
+                    best = eval_val.eval['ROUGE_L'] + eval_val.eval['CIDEr']
                     best_epoch = epoch                
                     torch.save(save_obj, os.path.join(args.output_dir, 'checkpoint_best.pth')) 
 
