@@ -2,7 +2,8 @@ image_root: '/home/ayesha.ishaq/Downloads/'
 ann_root: '/home/ayesha.ishaq/Desktop/AI701/CookBookCreater/recipe1M/'
 
 # set pretrained as a file path or an url
-pretrained: 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth'
+# pretrained: 'https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_caption_capfilt_large.pth'
+pretrained: "/home/ayesha.ishaq/Desktop/AI701/CookBookCreater/checkpoint_best.pth"
 
 # size of vit model; base or large
 vit: 'base'
@@ -28,5 +29,5 @@ prompt: 'the food is '
 # optimizer
 weight_decay: 0.05
 min_lr: 0
-max_epoch: 3
+max_epoch: 1
 

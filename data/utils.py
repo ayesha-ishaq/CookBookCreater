@@ -73,7 +73,7 @@ def save_result(result, result_dir, filename, remove_duplicate=''):
         json.dump(result,open(final_result_file,'w'))            
         print('result file saved to %s'%final_result_file)
 
-    return final_result_file
+    return result_file, final_result_file
 
 
 
