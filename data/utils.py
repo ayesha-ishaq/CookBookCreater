@@ -73,8 +73,13 @@ def save_result(result, result_dir, filename, remove_duplicate=''):
         json.dump(result,open(final_result_file,'w'))            
         print('result file saved to %s'%final_result_file)
 
-    return result_file, final_result_file
+    return final_result_file
 
+def save_ann(ann, result_dir, filename):
+    ann_file = os.path.join(result_dir, '{}.json'.format(filename))
+    json.dump(ann, open(ann_file,'w'))
+
+    return ann_file
 
 
 from pycocotools.coco import COCO

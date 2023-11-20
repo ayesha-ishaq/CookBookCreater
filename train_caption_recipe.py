@@ -26,7 +26,7 @@ from models.blip import blip_decoder
 import utils
 from utils import cosine_lr_schedule
 from data import create_dataset, create_sampler, create_loader
-from data.utils import save_result, custom_title_eval
+from data.utils import save_result, custom_title_eval, save_ann
 
 def train(model, data_loader, optimizer, epoch, device):
     # train
@@ -71,7 +71,7 @@ def evaluate(model, data_loader, device, config):
         
         image = image.to(device)       
         
-        captions = model.generate(image, sample=True, num_beams=config['num_beams'], max_length=config['max_length'], 
+        captions = model.generate(image, sample=True, num_beams=config['top_p'], max_length=config['max_length'], 
                                   min_length=config['min_length'])
        
         for caption, img_id, caption_gt in zip(captions, image_id, captions_gt):
@@ -103,7 +103,7 @@ def main(args, config):
         global_rank = utils.get_rank()            
         samplers = create_sampler([train_dataset, val_dataset], [True, False], num_tasks, global_rank)       
     else:
-        samplers = [None]
+        samplers = [None, None]
     
     train_loader, val_loader = create_loader([train_dataset, val_dataset],samplers,
                                  batch_size=[config['batch_size']]*2,num_workers=[4, 4],
@@ -129,7 +129,7 @@ def main(args, config):
 
     print("Start training")
     start_time = time.time()    
-    for epoch in range(0, config['max_epoch']):
+    for epoch in range(2, config['max_epoch']+2):
         if not args.evaluate:        
             if args.distributed:
                 train_loader.sampler.set_epoch(epoch)
@@ -138,27 +138,27 @@ def main(args, config):
                 
             train_stats = train(model, train_loader, optimizer, epoch, device) 
         
-        val_result, gt = evaluate(model_without_ddp, val_loader, device, config)  
-        _, val_result_file = save_result(val_result, args.result_dir, 'val_epoch%d'%epoch, remove_duplicate='image_id')
-        val_gt_file, _ = save_result(gt, args.result_dir, 'val_gt_epoch%d'%epoch)    
+        # val_result, gt = evaluate(model_without_ddp, val_loader, device, config)  
+        # val_result_file = save_result(val_result, args.result_dir, 'val_epoch%d'%epoch, remove_duplicate='image_id')
+        # val_gt_file = save_ann(gt, 'val_gt_epoch%d'%epoch)    
 
         if utils.is_main_process():   
-            eval_val = custom_title_eval(val_gt_file, val_result_file,'val')
+            # eval_val = custom_title_eval(val_gt_file, val_result_file,'val')
             save_obj = {
                     'model': model_without_ddp.state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'config': config,
                     'epoch': epoch,
                 }
-            if eval_val.eval['ROUGE_L'] + eval_val.eval['CIDEr']> best:
-                    best = eval_val.eval['ROUGE_L'] + eval_val.eval['CIDEr']
-                    best_epoch = epoch                
-                    torch.save(save_obj, os.path.join(args.output_dir, 'checkpoint_best.pth')) 
+            # if eval_val.eval['ROUGE_L'] + eval_val.eval['CIDEr']> best:
+            #         best = eval_val.eval['ROUGE_L'] + eval_val.eval['CIDEr']
+            #         best_epoch = epoch                
+            torch.save(save_obj, os.path.join(args.output_dir, 'checkpoint_{}.pth'.format(epoch))) 
 
             log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
-                             **{f'val_{k}': v for k, v in eval_val.eval.items()},                      
-                             'epoch': epoch,
-                             'best_epoch': best_epoch,
+                            #  **{f'val_{k}': v for k, v in eval_val.eval.items()},                      
+                             'epoch': epoch
+                            #  'best_epoch': best_epoch,
                             }
             with open(os.path.join(args.output_dir, "log.txt"),"a") as f:
                 f.write(json.dumps(log_stats) + "\n")  

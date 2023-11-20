@@ -25,7 +25,7 @@ class Predictor():
         model = model.to(self.device)
 
         with torch.no_grad():
-            caption = model.generate(im, sample=True, num_beams=3, max_length=20, min_length=5)
+            caption = model.generate(im, sample=False, top_p=0.9, max_length=10, min_length=1)
             return caption[0]
         
     def generate_recipe(self, title):
@@ -48,7 +48,7 @@ def load_image(image, image_size, device):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--input', default='./demo.jpg', help='path to image for inference')
-    parser.add_argument('--weights', default='./checkpoint2.pth', help='path to weights for inference')
+    parser.add_argument('--weights', default='./checkpoint_best.pth', help='path to weights for inference')
     parser.add_argument('--output_dir', default='./output')  
     args = parser.parse_args()
 
