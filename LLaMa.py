@@ -32,7 +32,7 @@ class RecipeGenerator():
         self.B_INST, self.E_INST = "[INST]", "[/INST]"
         self.B_SYS, self.E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
         self.DEFAULT_SYSTEM_PROMPT = """\
-        You must provide the recipe for the asked food, if you don't know the exact recipe, provide recipe of the closest matched food"""
+        You must provide the recipe for the asked food, if you don't know the exact recipe, provide recipe of the closest matched food. Include only ingreadient list and recipe steps"""
 
 
     def get_prompt(self, instruction, new_system_prompt=""):

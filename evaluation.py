@@ -94,7 +94,7 @@ def main(args, config):
    
         
         log_stats = {**{f'val_{k}': v for k, v in eval_val.eval.items()}}
-        with open(os.path.join(args.output_dir, "log_eval_base.txt"),"a") as f:
+        with open(os.path.join(args.output_dir, "log_eval_large_epoch2_best.txt"),"a") as f:
             f.write(json.dumps(log_stats) + "\n")   
 
 
