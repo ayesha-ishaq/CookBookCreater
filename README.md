@@ -33,4 +33,4 @@ To run inference on any food image run:
 ### Acknowledgement
 The implementation of CookBook Creater relies on resources from <a href="https://huggingface.co/meta-llama/Llama-2-7b-chat-hf">LLaMa from META</a>, <a href="https://huggingface.co/lmsys/vicuna-7b-v1.5-16k">Vicuna</a>, <a href="https://github.com/salesforce/BLIP">BLIP</a>, <a href="https://github.com/huggingface/transformers">Huggingface Transformers</a>, and <a href="https://github.com/rwightman/pytorch-image-models/tree/master/timm">timm</a>. We thank the original authors for their open-sourcing.
 
-Please note that <a href="https://huggingface.co/meta-llama/Llama-2-7b-chat-hf">LLaMa from META</a> is a gated model and to use it you must request access on this link. 
+Please note that LLaMa-2 7B from META is a gated model and to use it you must request access on this <a href="https://huggingface.co/meta-llama/Llama-2-7b-chat-hf">link</a>. 
