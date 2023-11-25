@@ -16,7 +16,7 @@ import Vicuna
 def main(args):
         
     if args.model_llm == "llama":
-        generator = LLaMa.RecipeGenerator(token="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")
+        generator = LLaMa.RecipeGenerator(token="")
     else:
         generator = Vicuna.RecipeGenerator()
     
