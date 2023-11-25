@@ -11,7 +11,7 @@ import LLaMa
 import Vicuna
 
 class Predictor():
-    def __init__(self, weights='https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth', token="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", model='llama'):
+    def __init__(self, weights='https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth', token="", model='llama'):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
         self.model = blip_decoder(pretrained=weights,
